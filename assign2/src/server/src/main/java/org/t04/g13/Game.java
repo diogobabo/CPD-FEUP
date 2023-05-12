@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Game extends Thread {
+public class Game implements Runnable{
     private List<Player> players;
     private List<Question> questions;
     private ExecutorService playerPool;
