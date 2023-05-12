@@ -17,6 +17,7 @@ public class Server {
     private final List<Game> games;
     private final Queue<Player> waitingClients;
     private ExecutorService auth_pool;
+    private ExecutorService game_pool;
 
     public Server(int port) {
 
@@ -27,6 +28,7 @@ public class Server {
 
         //New thread pool with at most MAX_TRHEADS authentication attempts
         auth_pool = Executors.newFixedThreadPool(MAX_TRHEADS);
+        game_pool = Executors.newFixedThreadPool(10);
     }
 
     public void start() {
@@ -88,7 +90,7 @@ public class Server {
             if(gameTeam.size() == 2) {
                 Game game = new Game();
                 game.setPlayers(gameTeam);
-                game.start();
+                game_pool.execute(game);
                 for(Player play: gameTeam) {
                     waitingClients.remove(play);
                 }

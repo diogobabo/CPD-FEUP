@@ -88,7 +88,6 @@ public class Client {
                 }
                 else if(message.equals("GAME_START")) {
                     System.out.println("Game is about to start");
-
                 }
                 else if(message.equals("START_ROUND")) {
                     System.out.println("Round Started");

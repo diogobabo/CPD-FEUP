@@ -3,12 +3,16 @@ package server.src.main.java.org.t04.g13;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Game extends Thread {
 
 
     private List<Player> players;
     private List<Question> questions;
+
+    private ExecutorService player_pool;
 
     public Game() {
         players = new ArrayList<>();
@@ -18,6 +22,7 @@ public class Game extends Thread {
             throw new RuntimeException(e);
         }
         Collections.shuffle(questions);
+        player_pool = Executors.newFixedThreadPool(20);
     }
 
     public List<Question> parseQuestions() throws IOException {
@@ -52,11 +57,11 @@ public class Game extends Thread {
 
     @Override
     public void run() {
-        initGame();
-        for (int i = 0; i < Utils.NUM_QUESTIONS; i++) {
-            gameRound();
+        List<Question> quests = getRandomQuestions();
+        for(Player player : players) {
+            PlayerHandler playThread = new PlayerHandler(player, quests);
+            player_pool.execute(playThread);
         }
-        messageEveryone(Utils.GAME_END);
     }
     public void initGame() {
         this.messageEveryone(Utils.GAME_START);
@@ -149,5 +154,16 @@ public class Game extends Thread {
 
     public void setPlayers(List<Player> players){
         this.players = players;
+    }
+
+    public List<Question> getRandomQuestions() {
+        List<Question> res = new ArrayList<>();
+        for(int i = 0; i < Utils.NUM_QUESTIONS; i++) {
+            Random r = new Random();
+            int idx = r.nextInt(questions.size() - 1);
+            Question question = questions.get(idx);
+            res.add(question);
+        }
+        return res;
     }
 }
