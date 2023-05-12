@@ -52,7 +52,7 @@ public class PlayerHandler implements Runnable{
 
             if (Objects.equals(answer, "-1")) {
                 Utils.sendMessage(socket, "Wrong Answer!!");
-                return;
+                continue;
             }
             int answerIdx = Integer.parseInt(answer);
 
