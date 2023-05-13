@@ -26,6 +26,7 @@ public class Utils {
 
     public static void writeToSocket(SocketChannel socketChannel, String message) {
         try {
+            message = message + "\n";
             String messageWithLength = message.length() + ":" + message; // Prepend the length of the message
             ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
             socketChannel.write(buffer);
@@ -67,7 +68,6 @@ public class Utils {
             }
             // Clear the socket buffer
             readBuffer.clear();
-
             return msg;
         } catch (IOException e) {
             e.printStackTrace();

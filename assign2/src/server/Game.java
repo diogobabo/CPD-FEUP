@@ -51,16 +51,15 @@ public class Game implements Runnable {
 
     @Override
     public void run() {
-        game();
-    }
-
-    public void game() {
+        System.out.println(users.size());
         List<Question> quests = getRandomQuestions();
         for(SocketChannel userSocket: users) {
             Runnable user = new PlayerHandler(userSocket, quests);
             user_pool.execute(user);
         }
     }
+
+
 
     public List<Question> getRandomQuestions() {
         List<Question> res = new ArrayList<>();

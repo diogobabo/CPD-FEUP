@@ -83,11 +83,5 @@ public class Client {
         return Integer.toString(number);
     }
 
-    public void wait(int timeout) {
-        long startTime = System.currentTimeMillis();
-        long elapsedTime = 0;
-        while (elapsedTime < timeout) {
-            elapsedTime = System.currentTimeMillis() - startTime;
-        }
-    }
+
 }

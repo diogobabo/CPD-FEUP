@@ -46,7 +46,7 @@ public class Server {
         }
     }
 
-    public void addToQueue(SocketChannel user) throws IOException {
+    public synchronized void  addToQueue(SocketChannel user) throws IOException {
         this.userQueue.offer(user);
         if(userQueue.size() == 2) {
             List<SocketChannel> users = new ArrayList<>();
