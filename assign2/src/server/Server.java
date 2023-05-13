@@ -43,12 +43,15 @@ public class Server {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public synchronized void  addToQueue(SocketChannel user) throws IOException {
+    public synchronized void  addToQueue(SocketChannel user) throws IOException, InterruptedException {
         this.userQueue.offer(user);
         if(userQueue.size() == 2) {
+            Thread.sleep(1000);
             List<SocketChannel> users = new ArrayList<>();
             for(int i = 0; i < 2; i++) {
                 SocketChannel client = userQueue.poll();

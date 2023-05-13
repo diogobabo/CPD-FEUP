@@ -38,7 +38,7 @@ public class Utils {
 
     public static String readFromSocket(SocketChannel socketChannel) {
         try {
-            ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+            ByteBuffer readBuffer = ByteBuffer.allocate(4096);
             StringBuilder messageBuilder = new StringBuilder();
 
             int bytesRead;
