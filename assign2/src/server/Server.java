@@ -3,61 +3,60 @@ package server;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
-import java.util.Iterator;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
-    private final int PORT;
-    Selector selector;
+    private int PORT;
+    private ServerSocketChannel serverSocketChannel;
+
+    private ExecutorService game_pool;
+
+    private ArrayDeque<SocketChannel> userQueue;
+
 
     public Server(int port) {
-
-        this.PORT = port;
-
+        try {
+            this.PORT = port;
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.socket().bind(new InetSocketAddress(port));
+            serverSocketChannel.configureBlocking(false);
+            userQueue = new ArrayDeque<>();
+            game_pool = Executors.newFixedThreadPool(2);
+            System.out.println("Server started and listening on port " + port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void start(){
-        try(ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()){
-            serverSocketChannel.socket().bind(new InetSocketAddress(PORT)); //Listen to port PORT
-            serverSocketChannel.configureBlocking(false); //Set to non-blocking mode
-            selector = Selector.open();
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-
-            System.out.println("Server started on port " + PORT);
-
-            //Listen for connection attempts
-            while(true){
-                selector.select();
-
-                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-                while(iterator.hasNext()){
-                    SelectionKey key = iterator.next();
-                    iterator.remove();
-
-                        if(!key.isValid()){
-                            continue;
-                        }
-                        //If client is trying to connect, accept connection
-                        if(key.isAcceptable()){
-                            SocketChannel client = ((ServerSocketChannel) key.channel()).accept();
-                            client.configureBlocking(false);
-                            client.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                        }
-                        //If we can write to client, write
-                        else if(key.isWritable()){
-                            SocketChannel client = (SocketChannel) key.channel();
-                        }
-                        //If we can read from client, read
-                        else if(key.isReadable()){
-                            SocketChannel client = (SocketChannel) key.channel();
-
-                        }
+        try {
+            while(true) {
+                SocketChannel socketChannel = serverSocketChannel.accept();
+                if (socketChannel != null) {
+                    addToQueue(socketChannel);
+                    System.out.println("New connection from: " + socketChannel.getRemoteAddress());
                 }
             }
-
-        }catch (IOException e){
-            System.err.println("start(): Error opening ServerSocketChannel.");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
+    public void addToQueue(SocketChannel user) throws IOException {
+        this.userQueue.offer(user);
+        if(userQueue.size() == 2) {
+            List<SocketChannel> users = new ArrayList<>();
+            for(int i = 0; i < 2; i++) {
+                SocketChannel client = userQueue.poll();
+                users.add(client);
+            }
+            Runnable game = new Game(users);
+            game_pool.execute(game);
+        }
     }
 
     public static void main(String[] args) {
@@ -71,9 +70,7 @@ public class Server {
                 System.out.printf("Using default port: %d%n%n", port);
             }
         }
-
         Server server = new Server(port);
         server.start();
-
     }
 }
