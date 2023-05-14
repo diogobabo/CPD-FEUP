@@ -17,7 +17,7 @@ public class PlayerHandler implements Runnable {
     @Override
     public void run() {
         for (Question question : questions) {
-            Utils.writeToSocket(socket, Utils.START_ROUND+"\n");
+            Utils.writeToSocket(socket, Utils.START_ROUND);
             String ask = "Q: " + question.getQuestion() + '\n';
             List<String> all = question.getAnswers();
             StringBuilder messageBuilder = new StringBuilder(ask);
@@ -43,12 +43,12 @@ public class PlayerHandler implements Runnable {
             int answerIdx = Integer.parseInt(answer) - 1;
 
             if(answer.equals("-1")) {
-                Utils.writeToSocket(socket, "Wrong Answer!" + "\n");
+                Utils.writeToSocket(socket, "Wrong Answer!");
             }
             else if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
-                Utils.writeToSocket(socket, "Correct Answer!" + "\n");
+                Utils.writeToSocket(socket, "Correct Answer!");
             } else {
-                Utils.writeToSocket(socket, "Wrong Answer!" + "\n");
+                Utils.writeToSocket(socket, "Wrong Answer!");
             }
 
             try {
@@ -57,6 +57,6 @@ public class PlayerHandler implements Runnable {
                 e.printStackTrace();
             }
         }
-        Utils.writeToSocket(socket, Utils.GAME_END+"\n");
+        Utils.writeToSocket(socket, Utils.GAME_END);
     }
 }

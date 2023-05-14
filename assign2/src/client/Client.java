@@ -46,7 +46,7 @@ public class Client {
                 String roundInfo = Utils.readFromSocket(socketChannel);
                 System.out.println(roundInfo+'\n');
                 System.out.println("Write your answer!");
-                String ans = readInput(6000) + "\n";
+                String ans = readInput(6000);
                 Utils.writeToSocket(socketChannel,ans);
                 Thread.sleep(1000);
                 System.out.println(Utils.readFromSocket(socketChannel));

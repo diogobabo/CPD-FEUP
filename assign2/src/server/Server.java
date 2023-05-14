@@ -63,7 +63,7 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        int port = 8000;
+        int port = 8002;
         if(args.length != 0){
             try{
                 port = Integer.parseInt(args[0]);
