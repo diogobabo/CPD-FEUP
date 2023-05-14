@@ -25,12 +25,9 @@ public class Utils {
         try {
             message = message + "&&\n"; // Add the delimiter "&&" before the newline character
             String messageWithLength = message.length() + ":" + message; // Prepend the length of the message
-
-            synchronized (socketChannel) {
-                ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
-                socketChannel.write(buffer);
-                buffer.clear();
-            }
+            ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
+            socketChannel.write(buffer);
+            buffer.clear();
         } catch (IOException e) {
             e.printStackTrace();
         }
