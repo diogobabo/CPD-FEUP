@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
 
 public class Client {
     private SocketChannel socketChannel;
@@ -25,17 +26,63 @@ public class Client {
             socketChannel.configureBlocking(true);
             socketChannel.connect(new InetSocketAddress(serverAddress, serverPort));
             System.out.println("Connected to the server at " + serverAddress + ":" + serverPort+'\n');
-            gameState(socketChannel);
+            authenticationState();
+            gameState();
         }
         catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void gameState(SocketChannel socket) throws IOException, InterruptedException {
+    public void authenticationState() throws IOException {
+        int i = 0;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while(true) {
             String msg = Utils.readFromSocket(socketChannel);
-            if (msg == null) {
+            if (msg == null || Objects.equals(msg,"nada")) {
+                continue;
+            }
+            else if(msg.equals("AUTHENTICATION")) {
+                System.out.println("1 - Register\n2 - Login\n3 - Disconnect");
+                String input = waitInput(60000);
+                Utils.writeToSocket(socketChannel,input);
+            }
+            else if(msg.equals("LOGIN")) {
+                i++;
+                if(i > 1) {
+                    System.out.println("Wrong credentials. Try again!");
+                }
+                else {
+                    System.out.println("Type your credentials!");
+                }
+                System.out.println("Username:");
+                String userName = waitInput(60000);
+                System.out.println("Password:");
+                String password = waitInput(60000);
+                Utils.writeToSocket(socketChannel,userName);
+                Utils.writeToSocket(socketChannel,password);
+            }
+            else if(msg.equals("REGISTER")) {
+                System.out.println("Type Username:");
+                String userName = waitInput(60000);
+                System.out.println("Type Password:");
+                String password = waitInput(60000);
+                Utils.writeToSocket(socketChannel,userName);
+                Utils.writeToSocket(socketChannel,password);
+            }
+            else if(msg.equals("SUCCESSFUL")) {
+                break;
+            }
+            else {
+                System.out.println(msg);
+            }
+        }
+    }
+
+    public void gameState() throws IOException, InterruptedException {
+        while(true) {
+            String msg = Utils.readFromSocket(socketChannel);
+            if (msg == null || Objects.equals(msg,"nada")) {
                 continue;
             }
             else if(msg.equals("N_QUEUE")) {
@@ -81,6 +128,21 @@ public class Client {
             System.out.println("Time's up. No answer was given.");
         }
         return Integer.toString(number);
+    }
+
+    public static String waitInput(int timeout) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        long startTime = System.currentTimeMillis();
+        long elapsedTime = 0;
+        String ans = "null";
+        while (elapsedTime < timeout) {
+            if (reader.ready()) {
+                ans = reader.readLine();
+                return ans;
+            }
+            elapsedTime = System.currentTimeMillis() - startTime;
+        }
+        return ans;
     }
 
 

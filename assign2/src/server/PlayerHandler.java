@@ -5,13 +5,16 @@ import java.util.List;
 import java.util.Objects;
 
 public class PlayerHandler implements Runnable {
+    private final Player player;
+
     private final SocketChannel socket;
 
     private final List<Question> questions;
 
-    public PlayerHandler(SocketChannel socket, List<Question> questions) {
-        this.socket = socket;
+    public PlayerHandler(Player player, List<Question> questions) {
+        this.socket = player.getClientSocket();
         this.questions = questions;
+        this.player = player;
     }
 
     @Override

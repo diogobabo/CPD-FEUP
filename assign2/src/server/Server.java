@@ -1,5 +1,7 @@
 package server;
 
+import jdk.jshell.execution.Util;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -14,8 +16,9 @@ public class Server {
     private ServerSocketChannel serverSocketChannel;
 
     private ExecutorService game_pool;
+    private ExecutorService auth_pool;
 
-    private ArrayDeque<SocketChannel> userQueue;
+    private ArrayDeque<Player> userQueue;
 
 
     public Server(int port) {
@@ -26,35 +29,44 @@ public class Server {
             serverSocketChannel.configureBlocking(false);
             userQueue = new ArrayDeque<>();
             game_pool = Executors.newFixedThreadPool(2);
+            auth_pool = Executors.newFixedThreadPool(4);
             System.out.println("Server started and listening on port " + port);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
-    public void start(){
+    public void start() {
         try {
-            while(true) {
+            while (true) {
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 if (socketChannel != null) {
-                    addToQueue(socketChannel);
-                    System.out.println("New connection from: " + socketChannel.getRemoteAddress());
+                    try {
+                        Runnable auth = new Auth(socketChannel, this);
+                        auth_pool.execute(auth);
+                        System.out.println("New connection from: " + socketChannel.getRemoteAddress());
+                    } catch (IOException e) {
+                        // Handle socket channel closure
+                        System.out.println("Connection closed by client: " + socketChannel.getRemoteAddress());
+                        socketChannel.close();
+                    }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    public synchronized void  addToQueue(SocketChannel user) throws IOException, InterruptedException {
+
+    public void addToQueue(Player user) throws InterruptedException {
         this.userQueue.offer(user);
+        System.out.println("olaolaosd");
         if(userQueue.size() == 2) {
             Thread.sleep(1000);
-            List<SocketChannel> users = new ArrayList<>();
+            List<Player> users = new ArrayList<>();
             for(int i = 0; i < 2; i++) {
-                SocketChannel client = userQueue.poll();
+                Player client = userQueue.poll();
                 users.add(client);
             }
             Runnable game = new Game(users);

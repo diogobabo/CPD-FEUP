@@ -2,6 +2,7 @@ package server;
 
 
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class Player {
@@ -13,14 +14,20 @@ public class Player {
     private int queueTime = 0;
     private int elo = 0;
 
-    private Socket clientSocket;
+    private SocketChannel clientSocket;
 
-    public Player(Socket socket) {
+    public Player(SocketChannel socket) {
         this.clientSocket = socket;
     }
 
-    public Player(Socket socket, int elo) {
+    public Player(SocketChannel socket, String name) {
         this.clientSocket = socket;
+        this.username = name;
+        this.elo = 500;
+    }
+    public Player(SocketChannel socket, String name, int elo) {
+        this.clientSocket = socket;
+        this.username = name;
         this.elo = elo;
     }
 
@@ -42,7 +49,7 @@ public class Player {
         return elo;
     }
 
-    public Socket getClientSocket() {
+    public SocketChannel getClientSocket() {
         return this.clientSocket;
     }
 

@@ -12,13 +12,13 @@ import java.util.concurrent.Executors;
 
 public class Game implements Runnable {
 
-    private final List<SocketChannel> users;
+    private final List<Player> users;
 
     private final ExecutorService user_pool;
 
     private final List<Question> questions;
 
-    public Game(List<SocketChannel> users) {
+    public Game(List<Player> users) {
         this.users = users;
         this.user_pool = Executors.newFixedThreadPool(2);
         this.questions = parseQuestions();
@@ -53,8 +53,8 @@ public class Game implements Runnable {
     public void run() {
         System.out.println(users.size());
         List<Question> quests = getRandomQuestions();
-        for(SocketChannel userSocket: users) {
-            Runnable user = new PlayerHandler(userSocket, quests);
+        for(Player player: users) {
+            Runnable user = new PlayerHandler(player, quests);
             user_pool.execute(user);
         }
     }

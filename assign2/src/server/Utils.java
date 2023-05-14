@@ -1,9 +1,6 @@
 package server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -41,8 +38,12 @@ public class Utils {
             ByteBuffer readBuffer = ByteBuffer.allocate(4096);
             StringBuilder messageBuilder = new StringBuilder();
 
-            int bytesRead;
-            while ((bytesRead = socketChannel.read(readBuffer)) > 0) {
+            int bytesRead = socketChannel.read(readBuffer);
+            if (bytesRead == -1) {
+                return "nada";  // Return empty string to indicate no data was received
+            }
+
+            while (bytesRead > 0) {
                 readBuffer.flip();
                 byte[] bytes = new byte[bytesRead];
                 readBuffer.get(bytes);
@@ -54,25 +55,68 @@ public class Utils {
                 }
 
                 readBuffer.clear();
-            }
-
-            if (bytesRead == -1) {
-                return null;
+                bytesRead = socketChannel.read(readBuffer);
             }
 
             String msg = messageBuilder.toString().trim();
+            if(msg.equals("1:")) {
+                return "nada";
+            }
             int colonIndex = msg.indexOf(':');
             if (colonIndex != -1) {
                 msg = msg.substring(colonIndex + 1);
                 return msg;
             }
-            // Clear the socket buffer
-            readBuffer.clear();
+
             return msg;
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    public static int isCredentialsValid(String name, String password) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/server/users.csv"))) {
+            String line;
+            int lastNumber = -1;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length >= 3 && fields[0].equals(name) && fields[1].equals(password)) {
+                    lastNumber = Integer.parseInt(fields[2]);
+                }
+            }
+            return lastNumber;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static boolean doesUsernameExist(String name) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/server/users.csv"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+                if (fields.length >= 1 && fields[0].equals(name)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void addUser(String name, String password) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("src/server/users.csv", true))) {
+            String line = name + "," + password + ",500";
+            writer.println(line);
+            writer.flush(); // Flush the PrintWriter to ensure the data is written immediately
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
