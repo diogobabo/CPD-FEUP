@@ -112,7 +112,7 @@ public class Server {
                 System.out.println("Team ELO:" + averageElo);
                 System.out.println("Player ELO - " + (player.getElo() - maxDiff) + " & " + (player.getElo() + maxDiff));
 
-                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < 4) {
+                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < Utils.MAX_PLAYERS) {
                     team.add(player);
                     added = true;
                     break;
@@ -127,7 +127,7 @@ public class Server {
         }
 
         for (List<Player> gameTeam : allTeams) {
-            if (gameTeam.size() == 4) {
+            if (gameTeam.size() == Utils.MAX_PLAYERS) {
                 Runnable game = new Game(gameTeam);
                 game_pool.execute(game);
                 for (Player play : gameTeam) {

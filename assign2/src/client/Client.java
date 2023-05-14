@@ -57,7 +57,7 @@ public class Client {
                     System.out.println("Type your credentials!");
                 }
                 System.out.println("Username:");
-                String userName = waitInput(5000);
+                String userName = waitInput(60000);
                 System.out.println("Password:");
                 String password = waitInput(60000);
                 Utils.writeToSocket(socketChannel,userName);
