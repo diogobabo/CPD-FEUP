@@ -4,6 +4,7 @@ import jdk.jshell.execution.Util;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -76,13 +77,31 @@ public class Server {
     }
 
     public void addToQueue(Player user) throws InterruptedException {
-        this.userQueue.offer(user);
-        user.startQueueTimer();
+        if(!userInQueue(user)) {
+            this.userQueue.offer(user);
+            user.startQueueTimer();
+        }
+    }
+
+    public boolean userInQueue(Player user) {
+        for(Player play: userQueue) {
+            if(play.getUsername().equals(user.getUsername())) {
+                play.setClientSocket(user.getClientSocket());
+                return true;
+            }
+        }
+        return false;
     }
 
     public void matchMaking() {
         List<List<Player>> allTeams = new ArrayList<>();
+        for(Player player : userQueue) {
+            System.out.println(player.getUsername() + '\n');
+        }
         for (Player player : userQueue) {
+            if(!Utils.isClientConnected(player.getClientSocket())) {
+                continue;
+            }
             int maxDiff = player.getQueueTime() * 5;
             boolean added = false;
 
@@ -93,7 +112,7 @@ public class Server {
                 System.out.println("Team ELO:" + averageElo);
                 System.out.println("Player ELO - " + (player.getElo() - maxDiff) + " & " + (player.getElo() + maxDiff));
 
-                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < Utils.MAX_PLAYERS) {
+                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < 4) {
                     team.add(player);
                     added = true;
                     break;
@@ -108,7 +127,7 @@ public class Server {
         }
 
         for (List<Player> gameTeam : allTeams) {
-            if (gameTeam.size() == 2) {
+            if (gameTeam.size() == 4) {
                 Runnable game = new Game(gameTeam);
                 game_pool.execute(game);
                 for (Player play : gameTeam) {
@@ -133,6 +152,4 @@ public class Server {
         Server server = new Server(port);
         server.start();
     }
-
-
 }

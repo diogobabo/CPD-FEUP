@@ -12,6 +12,7 @@ public class Player {
 
     private final int eloRange = 100;
     private int queueTime = 0;
+
     private int elo = 0;
 
     private SocketChannel clientSocket;
@@ -61,15 +62,17 @@ public class Player {
         return queueTime;
     }
 
-    // Method to start the timer and update the queueTime
     public void startQueueTimer() {
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                queueTime++; // Increment queueTime every second
+                queueTime++;
             }
-        }, 0, 1000); // Run the task every second (1000 milliseconds)
+        }, 0, 1000);
     }
 
+    public void setClientSocket(SocketChannel clientSocket) {
+        this.clientSocket = clientSocket;
+    }
 }

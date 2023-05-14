@@ -20,7 +20,7 @@ public class Game implements Runnable {
 
     public Game(List<Player> users) {
         this.users = users;
-        this.user_pool = Executors.newFixedThreadPool(2);
+        this.user_pool = Executors.newFixedThreadPool(4);
         this.questions = parseQuestions();
     }
 

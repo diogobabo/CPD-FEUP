@@ -87,8 +87,15 @@ public class Utils {
     }
 
 
-    private static Lock getChannelLock(SocketChannel socketChannel) {
-        return channelLocks.computeIfAbsent(socketChannel, channel -> new ReentrantLock());
+    public static boolean isClientConnected(SocketChannel socketChannel) {
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(1);
+            int bytesWritten = socketChannel.write(buffer);
+            return bytesWritten != -1; // Check if any bytes were written
+        } catch (IOException e) {
+            // Exception occurred, indicating the client is not connected
+            return false;
+        }
     }
 
     public static int isCredentialsValid(String name, String password) {

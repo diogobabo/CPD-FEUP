@@ -57,7 +57,7 @@ public class Client {
                     System.out.println("Type your credentials!");
                 }
                 System.out.println("Username:");
-                String userName = waitInput(60000);
+                String userName = waitInput(5000);
                 System.out.println("Password:");
                 String password = waitInput(60000);
                 Utils.writeToSocket(socketChannel,userName);
@@ -140,7 +140,7 @@ public class Client {
         return Integer.toString(number);
     }
 
-    public static String waitInput(int timeout) throws IOException {
+    public String waitInput(int timeout) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         long startTime = System.currentTimeMillis();
         long elapsedTime = 0;
@@ -153,7 +153,8 @@ public class Client {
             elapsedTime = System.currentTimeMillis() - startTime;
         }
         System.out.println("Too long to answer...");
-        System.exit(1);
+        socketChannel.close();
+        System.exit(0);
         return ans;
     }
 
