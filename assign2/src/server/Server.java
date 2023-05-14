@@ -18,6 +18,8 @@ public class Server {
     private ExecutorService game_pool;
     private ExecutorService auth_pool;
 
+    private ExecutorService matchmaking_pool;
+
     private ArrayDeque<Player> userQueue;
 
 
@@ -29,6 +31,7 @@ public class Server {
             userQueue = new ArrayDeque<>();
             game_pool = Executors.newFixedThreadPool(2);
             auth_pool = Executors.newFixedThreadPool(4);
+            matchmaking_pool = Executors.newSingleThreadExecutor();
             System.out.println("Server started and listening on port " + port);
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,6 +41,8 @@ public class Server {
 
     public void start() {
         try {
+            MatchMaking matchmaking = new MatchMaking(this, 1000);
+            matchmaking_pool.execute(matchmaking);
             while (true) {
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 if (socketChannel != null) {
@@ -57,8 +62,7 @@ public class Server {
         }
     }
 
-
-    public void addToQueue(Player user) throws InterruptedException {
+    public void addToQueueSave(Player user) throws InterruptedException {
         this.userQueue.offer(user);
         if(userQueue.size() == 2) {
             List<Player> users = new ArrayList<>();
@@ -70,6 +74,50 @@ public class Server {
             game_pool.execute(game);
         }
     }
+
+    public void addToQueue(Player user) throws InterruptedException {
+        this.userQueue.offer(user);
+        user.startQueueTimer();
+    }
+
+    public void matchMaking() {
+        List<List<Player>> allTeams = new ArrayList<>();
+        for (Player player : userQueue) {
+            int maxDiff = player.getQueueTime() * 5;
+            boolean added = false;
+
+            for (List<Player> team : allTeams) {
+                int teamSize = team.size();
+                int totalElo = team.stream().mapToInt(Player::getElo).sum();
+                int averageElo = totalElo / teamSize;
+                System.out.println("Team ELO:" + averageElo);
+                System.out.println("Player ELO - " + (player.getElo() - maxDiff) + " & " + (player.getElo() + maxDiff));
+
+                if (Math.abs(averageElo - player.getElo()) <= maxDiff && teamSize < Utils.MAX_PLAYERS) {
+                    team.add(player);
+                    added = true;
+                    break;
+                }
+            }
+
+            if (!added) {
+                List<Player> newTeam = new ArrayList<>();
+                newTeam.add(player);
+                allTeams.add(newTeam);
+            }
+        }
+
+        for (List<Player> gameTeam : allTeams) {
+            if (gameTeam.size() == 2) {
+                Runnable game = new Game(gameTeam);
+                game_pool.execute(game);
+                for (Player play : gameTeam) {
+                    userQueue.remove(play);
+                }
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         int port = 8002;
@@ -85,4 +133,6 @@ public class Server {
         Server server = new Server(port);
         server.start();
     }
+
+
 }

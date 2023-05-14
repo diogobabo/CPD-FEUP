@@ -106,7 +106,6 @@ public class Client {
                 System.out.println("Write your answer!");
                 String ans = readInput(6000);
                 Utils.writeToSocket(socketChannel,ans);
-                Thread.sleep(1000);
                 System.out.println(Utils.readFromSocket(socketChannel));
             }
             else if(msg.equals("GAME_FINISHED")) {
