@@ -23,11 +23,14 @@ public class Utils {
 
     public static void writeToSocket(SocketChannel socketChannel, String message) {
         try {
-            message = message + "\n";
+            message = message + "&&\n"; // Add the delimiter "&&" before the newline character
             String messageWithLength = message.length() + ":" + message; // Prepend the length of the message
-            ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
-            socketChannel.write(buffer);
-            buffer.clear();
+
+            synchronized (socketChannel) {
+                ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
+                socketChannel.write(buffer);
+                buffer.clear();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,7 +53,7 @@ public class Utils {
                 String receivedData = new String(bytes, StandardCharsets.UTF_8);
                 messageBuilder.append(receivedData);
 
-                if (receivedData.contains("\n")) {
+                if (receivedData.contains("&&")) {
                     break;
                 }
 
@@ -59,12 +62,16 @@ public class Utils {
             }
 
             String msg = messageBuilder.toString().trim();
-            if(msg.equals("1:")) {
+            if (msg.equals("1:")) {
                 return "nada";
             }
             int colonIndex = msg.indexOf(':');
             if (colonIndex != -1) {
                 msg = msg.substring(colonIndex + 1);
+                int delimiterIndex = msg.indexOf("&&");
+                if (delimiterIndex != -1) {
+                    msg = msg.substring(0, delimiterIndex);
+                }
                 return msg;
             }
 

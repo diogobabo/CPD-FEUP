@@ -36,6 +36,7 @@ public class Client {
 
     public void authenticationState() throws IOException {
         int i = 0;
+        int j = 0;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while(true) {
             String msg = Utils.readFromSocket(socketChannel);
@@ -63,6 +64,13 @@ public class Client {
                 Utils.writeToSocket(socketChannel,password);
             }
             else if(msg.equals("REGISTER")) {
+                j++;
+                if(j > 1) {
+                    System.out.println("Username in Use. Try again!");
+                }
+                else {
+                    System.out.println("Type your credentials!");
+                }
                 System.out.println("Type Username:");
                 String userName = waitInput(60000);
                 System.out.println("Type Password:");
@@ -71,6 +79,9 @@ public class Client {
                 Utils.writeToSocket(socketChannel,password);
             }
             else if(msg.equals("SUCCESSFUL")) {
+                System.out.println("Successful authentication!");
+                System.out.println("Waiting for other players to join...");
+
                 break;
             }
             else {
@@ -85,13 +96,13 @@ public class Client {
             if (msg == null || Objects.equals(msg,"nada")) {
                 continue;
             }
-            else if(msg.equals("N_QUEUE")) {
+            else if(msg.equals("IN_QUEUE")) {
                 System.out.println("Waiting for other players to join...");
             }
             else if(msg.equals("START_ROUND")) {
                 System.out.println("Round is about to start!");
                 String roundInfo = Utils.readFromSocket(socketChannel);
-                System.out.println(roundInfo+'\n');
+                System.out.println(roundInfo);
                 System.out.println("Write your answer!");
                 String ans = readInput(6000);
                 Utils.writeToSocket(socketChannel,ans);

@@ -49,9 +49,10 @@ public class Auth implements Runnable{
                 register();
                 break;
             case SUCCESS:
+                Thread.sleep(1000);
+                Utils.writeToSocket(user,"SUCCESSFUL");
                 server.addToQueue(player);
                 clientState = AuthState.DISCONNECT;
-                Utils.writeToSocket(user,"SUCCESSFUL");
                 break;
             case DISCONNECT:
                 break;
