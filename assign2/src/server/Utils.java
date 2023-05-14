@@ -5,6 +5,10 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Utils {
 
@@ -21,26 +25,37 @@ public class Utils {
 
     private static final int BUFFER_SIZE = 1024;
 
+    private static final Map<SocketChannel, Lock> channelLocks = new ConcurrentHashMap<>();
+
     public static void writeToSocket(SocketChannel socketChannel, String message) {
         try {
-            message = message + "&&\n"; // Add the delimiter "&&" before the newline character
-            String messageWithLength = message.length() + ":" + message; // Prepend the length of the message
+            Lock lock = getChannelLock(socketChannel);
+            lock.lock(); // Acquire the lock before writing to the socket
+
+            message = message + "&&\n";
+            String messageWithLength = message.length() + ":" + message;
             ByteBuffer buffer = ByteBuffer.wrap(messageWithLength.getBytes());
             socketChannel.write(buffer);
             buffer.clear();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            Lock lock = getChannelLock(socketChannel);
+            lock.unlock(); // Release the lock after writing to the socket
         }
     }
 
     public static String readFromSocket(SocketChannel socketChannel) {
         try {
+            Lock lock = getChannelLock(socketChannel);
+            lock.lock(); // Acquire the lock before reading from the socket
+
             ByteBuffer readBuffer = ByteBuffer.allocate(4096);
             StringBuilder messageBuilder = new StringBuilder();
 
             int bytesRead = socketChannel.read(readBuffer);
             if (bytesRead == -1) {
-                return "nada";  // Return empty string to indicate no data was received
+                return "nada";
             }
 
             while (bytesRead > 0) {
@@ -75,9 +90,16 @@ public class Utils {
             return msg;
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            Lock lock = getChannelLock(socketChannel);
+            lock.unlock(); // Release the lock after reading from the socket
         }
 
         return null;
+    }
+
+    private static Lock getChannelLock(SocketChannel socketChannel) {
+        return channelLocks.computeIfAbsent(socketChannel, channel -> new ReentrantLock());
     }
 
     public static int isCredentialsValid(String name, String password) {

@@ -60,9 +60,7 @@ public class Server {
 
     public void addToQueue(Player user) throws InterruptedException {
         this.userQueue.offer(user);
-        System.out.println("olaolaosd");
         if(userQueue.size() == 2) {
-            Thread.sleep(1000);
             List<Player> users = new ArrayList<>();
             for(int i = 0; i < 2; i++) {
                 Player client = userQueue.poll();
