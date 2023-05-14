@@ -26,7 +26,6 @@ public class Server {
             this.PORT = port;
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(port));
-            serverSocketChannel.configureBlocking(false);
             userQueue = new ArrayDeque<>();
             game_pool = Executors.newFixedThreadPool(2);
             auth_pool = Executors.newFixedThreadPool(4);
