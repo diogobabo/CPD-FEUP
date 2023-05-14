@@ -144,7 +144,7 @@ public class Client {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         long startTime = System.currentTimeMillis();
         long elapsedTime = 0;
-        String ans = "null";
+        String ans = null;
         while (elapsedTime < timeout) {
             if (reader.ready()) {
                 ans = reader.readLine();
@@ -152,6 +152,8 @@ public class Client {
             }
             elapsedTime = System.currentTimeMillis() - startTime;
         }
+        System.out.println("Too long to answer...");
+        System.exit(1);
         return ans;
     }
 
