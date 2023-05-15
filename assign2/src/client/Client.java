@@ -80,8 +80,14 @@ public class Client {
             }
             else if(msg.equals("SUCCESSFUL")) {
                 System.out.println("Successful authentication!");
-                System.out.println("Waiting for other players to join...");
-
+                System.out.println("Choose queue type:");
+                System.out.println("1 - Normal");
+                System.out.println("2 - Ranked");
+                String opt = waitInput(60000);
+                Utils.writeToSocket(socketChannel,opt);
+            }
+            else if(msg.equals("IN_QUEUE")) {
+                System.out.println("Waiting for others players to join...");
                 break;
             }
             else {

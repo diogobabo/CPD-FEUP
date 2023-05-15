@@ -21,7 +21,9 @@ public class Server {
 
     private ExecutorService matchmaking_pool;
 
-    private ArrayDeque<Player> userQueue;
+    private ArrayDeque<Player> normalQueue;
+    private ArrayDeque<Player> rankedQueue;
+
 
 
     public Server(int port) {
@@ -29,7 +31,8 @@ public class Server {
             this.PORT = port;
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.socket().bind(new InetSocketAddress(port));
-            userQueue = new ArrayDeque<>();
+            normalQueue = new ArrayDeque<>();
+            rankedQueue = new ArrayDeque<>();
             game_pool = Executors.newFixedThreadPool(2);
             auth_pool = Executors.newFixedThreadPool(4);
             matchmaking_pool = Executors.newSingleThreadExecutor();
@@ -64,11 +67,11 @@ public class Server {
     }
 
     public void addToQueueSave(Player user) throws InterruptedException {
-        this.userQueue.offer(user);
-        if(userQueue.size() == 2) {
+        this.normalQueue.offer(user);
+        if(normalQueue.size() >= 2) {
             List<Player> users = new ArrayList<>();
             for(int i = 0; i < 2; i++) {
-                Player client = userQueue.poll();
+                Player client = normalQueue.poll();
                 users.add(client);
             }
             Runnable game = new Game(users);
@@ -77,14 +80,14 @@ public class Server {
     }
 
     public void addToQueue(Player user) throws InterruptedException {
-        if(!userInQueue(user)) {
-            this.userQueue.offer(user);
+        if(!userInQueue(user,rankedQueue)) {
+            this.rankedQueue.offer(user);
             user.startQueueTimer();
         }
     }
 
-    public boolean userInQueue(Player user) {
-        for(Player play: userQueue) {
+    public boolean userInQueue(Player user, ArrayDeque<Player> queue) {
+        for(Player play: queue) {
             if(play.getUsername().equals(user.getUsername())) {
                 play.setClientSocket(user.getClientSocket());
                 return true;
@@ -95,10 +98,10 @@ public class Server {
 
     public void matchMaking() {
         List<List<Player>> allTeams = new ArrayList<>();
-        for(Player player : userQueue) {
+        for(Player player : rankedQueue) {
             System.out.println(player.getUsername() + '\n');
         }
-        for (Player player : userQueue) {
+        for (Player player : rankedQueue) {
             if(!Utils.isClientConnected(player.getClientSocket())) {
                 continue;
             }
@@ -131,7 +134,7 @@ public class Server {
                 Runnable game = new Game(gameTeam);
                 game_pool.execute(game);
                 for (Player play : gameTeam) {
-                    userQueue.remove(play);
+                    rankedQueue.remove(play);
                 }
             }
         }
