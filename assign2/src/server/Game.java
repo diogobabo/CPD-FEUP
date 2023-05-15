@@ -3,16 +3,16 @@ package server;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static java.lang.Math.round;
 
 public class Game implements Runnable {
 
     private final List<Player> users;
+    private final Map<Player,Integer> scores = new HashMap<>();
 
     private final ExecutorService user_pool;
 
@@ -27,7 +27,6 @@ public class Game implements Runnable {
     public List<Question> parseQuestions() {
         String filename = "src/server/questions.csv";
         List<Question> all = new ArrayList<>();
-
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
@@ -53,14 +52,87 @@ public class Game implements Runnable {
     public void run() {
         System.out.println(users.size());
         List<Question> quests = getRandomQuestions();
-        for(Player player: users) {
-            Runnable user = new PlayerHandler(player, quests);
-            user_pool.execute(user);
+        for(Player player : users) {
+            scores.put(player,0);
         }
+        for (Question question : quests) {
+            messageAll(Utils.START_ROUND);
+            String ask = "Q: " + question.getQuestion() + '\n';
+            List<String> all = question.getAnswers();
+            StringBuilder messageBuilder = new StringBuilder(ask);
+
+            for (int j = 0; j < 4; j++) {
+                String opt = Integer.toString(j + 1) + ") " + all.get(j) + '\n';
+                messageBuilder.append(opt);
+            }
+            String roundInfo = messageBuilder.toString();
+            messageAll(roundInfo);
+
+            try {
+                Thread.sleep(6200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Map<Player,String> results =  getResults();
+
+            for (Player player : users) {
+                String answer = results.get(player);
+                int answerIdx = Integer.parseInt(answer) - 1;
+
+                if(answer.equals("-1")) {
+                    Utils.writeToSocket (player.getClientSocket(),"Wrong Answer!");
+                    scores.put(player,scores.get(player) - 1);
+                }
+                else if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
+                    Utils.writeToSocket (player.getClientSocket(),"Correct Answer!");
+                    scores.put(player,scores.get(player) + 1);
+                } else {
+                    Utils.writeToSocket (player.getClientSocket(),"Wrong Answer!");
+                    scores.put(player,scores.get(player) - 1);
+                }
+            }
+
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        assignScores();
+        messageAll(Utils.GAME_END);
+
     }
 
-
-
+    public void messageAll(String message) {
+        for (Player player : users) {
+            Utils.writeToSocket(player.getClientSocket(), message);
+        }
+    }
+    public void assignScores() {
+        int numQuestions = Utils.NUM_QUESTIONS;
+        int averageRating = 0;
+        for(Player player : users) {
+            averageRating += player.getElo();
+        }
+        averageRating = averageRating / users.size();
+        for (Player player : users) {
+            int score = scores.get(player)-(numQuestions/2);
+            int elo = player.getElo();
+            int newElo = elo + (score * 10) + (elo > averageRating + 100? 0: round((averageRating / elo) * 3));
+            player.setElo(newElo);
+            Utils.writeToSocket(player.getClientSocket(), "Your new elo is: " + newElo);
+        }
+        updateScoreFile();
+    }
+    public Map<Player,String> getResults() {
+        Map<Player,String> results = new HashMap<>();
+        for (Player player : users) {
+            String result = Utils.readFromSocket(player.getClientSocket());
+            results.put(player, Objects.requireNonNullElse(result, "-1"));
+        }
+        return results;
+    }
     public List<Question> getRandomQuestions() {
         List<Question> res = new ArrayList<>();
         for (int i = 0; i < Utils.NUM_QUESTIONS; i++) {
@@ -71,5 +143,9 @@ public class Game implements Runnable {
         }
         return res;
     }
-
+    public void updateScoreFile() {
+        for (Player player : users) {
+            Utils.updateUserElo(player.getUsername(),Integer.toString(player.getElo()));
+        }
+    }
 }

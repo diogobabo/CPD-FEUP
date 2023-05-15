@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static server.Utils.MAX_THREADS;
+
 public class Server {
     private int PORT;
     private ServerSocketChannel serverSocketChannel;
@@ -30,11 +32,12 @@ public class Server {
         try {
             this.PORT = port;
             serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().bind(new InetSocketAddress(port));
+            serverSocketChannel.socket().bind(new InetSocketAddress("localhost",port));
+            serverSocketChannel.configureBlocking(false);
             normalQueue = new ArrayDeque<>();
             rankedQueue = new ArrayDeque<>();
-            game_pool = Executors.newFixedThreadPool(2);
-            auth_pool = Executors.newFixedThreadPool(4);
+            game_pool = Executors.newFixedThreadPool(MAX_THREADS/2);
+            auth_pool = Executors.newFixedThreadPool((MAX_THREADS/2)-1);
             matchmaking_pool = Executors.newSingleThreadExecutor();
             System.out.println("Server started and listening on port " + port);
         } catch (IOException e) {

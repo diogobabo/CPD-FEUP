@@ -1,12 +1,10 @@
 package client;
 
-import server.Utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
 
@@ -40,7 +38,7 @@ public class Client {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while(true) {
             String msg = Utils.readFromSocket(socketChannel);
-            if (msg == null || Objects.equals(msg,"nada")) {
+            if (msg == null) {
                 continue;
             }
             else if(msg.equals("AUTHENTICATION")) {
@@ -99,7 +97,7 @@ public class Client {
     public void gameState() throws IOException, InterruptedException {
         while(true) {
             String msg = Utils.readFromSocket(socketChannel);
-            if (msg == null || Objects.equals(msg,"nada")) {
+            if (msg == null) {
                 continue;
             }
             else if(msg.equals("IN_QUEUE")) {
