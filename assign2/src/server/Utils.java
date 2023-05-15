@@ -135,12 +135,14 @@ public class Utils {
     }
 
     public static void addUser(String name, String password) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("src/server/users.csv", true))) {
-            String line = name + "," + password + ",500";
-            writer.println(line);
-            writer.flush(); // Flush the PrintWriter to ensure the data is written immediately
-        } catch (IOException e) {
-            e.printStackTrace();
+        synchronized (lock) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter("src/server/users.csv", true))) {
+                String line = name + "," + password + ",500";
+                writer.println(line);
+                writer.flush(); // Flush the PrintWriter to ensure the data is written immediately
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
     public static void updateUserElo(String name, String elo){
