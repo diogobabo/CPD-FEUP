@@ -18,10 +18,16 @@ public class Game implements Runnable {
 
     private final List<Question> questions;
 
-    public Game(List<Player> users) {
+    private final int averageElo;
+
+    private final int type;
+
+    public Game(List<Player> users, int type) {
         this.users = users;
         this.user_pool = Executors.newFixedThreadPool(2);
         this.questions = parseQuestions();
+        this.averageElo = findAvgElo();
+        this.type = type;
     }
 
     public List<Question> parseQuestions() {
@@ -54,12 +60,10 @@ public class Game implements Runnable {
         System.out.println(users.size());
         List<Question> quests = getRandomQuestions();
         for(Player player: users) {
-            Runnable user = new PlayerHandler(player, quests);
+            Runnable user = new PlayerHandler(player, quests,this.averageElo,this.type);
             user_pool.execute(user);
         }
     }
-
-
 
     public List<Question> getRandomQuestions() {
         List<Question> res = new ArrayList<>();
@@ -72,4 +76,12 @@ public class Game implements Runnable {
         return res;
     }
 
+    public int findAvgElo() {
+        int sum = 0;
+        for(Player player: users) {
+            sum += player.getElo();
+        }
+
+        return sum / users.size();
+    }
 }

@@ -74,7 +74,7 @@ public class Server {
                 Player client = normalQueue.poll();
                 users.add(client);
             }
-            Runnable game = new Game(users);
+            Runnable game = new Game(users,1);
             game_pool.execute(game);
         }
     }
@@ -131,7 +131,7 @@ public class Server {
 
         for (List<Player> gameTeam : allTeams) {
             if (gameTeam.size() == Utils.MAX_PLAYERS) {
-                Runnable game = new Game(gameTeam);
+                Runnable game = new Game(gameTeam,2);
                 game_pool.execute(game);
                 for (Player play : gameTeam) {
                     rankedQueue.remove(play);

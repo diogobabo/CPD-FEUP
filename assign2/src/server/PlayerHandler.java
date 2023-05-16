@@ -2,7 +2,6 @@ package server;
 
 import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.util.Objects;
 
 public class PlayerHandler implements Runnable {
     private final Player player;
@@ -11,10 +10,19 @@ public class PlayerHandler implements Runnable {
 
     private final List<Question> questions;
 
-    public PlayerHandler(Player player, List<Question> questions) {
+    private int rightAnswers;
+
+    private final int averageElo;
+
+    private final int type;
+
+    public PlayerHandler(Player player, List<Question> questions, int averageElo, int type) {
         this.socket = player.getClientSocket();
         this.questions = questions;
         this.player = player;
+        this.rightAnswers = 0;
+        this.averageElo = averageElo;
+        this.type = type;
     }
 
     @Override
@@ -26,7 +34,7 @@ public class PlayerHandler implements Runnable {
             StringBuilder messageBuilder = new StringBuilder(ask);
 
             for (int j = 0; j < 4; j++) {
-                String opt = Integer.toString(j + 1) + ") " + all.get(j) + '\n';
+                String opt = j + 1 + ") " + all.get(j) + '\n';
                 messageBuilder.append(opt);
             }
             String roundInfo = messageBuilder.toString();
@@ -50,6 +58,7 @@ public class PlayerHandler implements Runnable {
             }
             else if (all.get(answerIdx).equals(question.getCorrectAnswer())) {
                 Utils.writeToSocket(socket, "Correct Answer!");
+                this.rightAnswers += 1;
             } else {
                 Utils.writeToSocket(socket, "Wrong Answer!");
             }
@@ -61,5 +70,19 @@ public class PlayerHandler implements Runnable {
             }
         }
         Utils.writeToSocket(socket, Utils.GAME_END);
+        if(type == 2) {
+            updateElo();
+        }
+        Utils.writeToSocket(socket,"Your current elo is: " + player.getElo());
+    }
+
+    public void updateElo() {
+        int elo = player.getElo();
+        float factor = (float) averageElo / elo;
+        int eloIncrease = (int) (rightAnswers * 10 * factor);
+        int eloDecrease = (int) ((Utils.NUM_QUESTIONS - rightAnswers) * 10 / factor);
+        int newElo = elo + eloIncrease - eloDecrease;
+        player.setElo(newElo);
+        Utils.updateUserElo(player.getUsername(),Integer.toString(newElo));
     }
 }

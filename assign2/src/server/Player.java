@@ -13,7 +13,7 @@ public class Player {
     private final int eloRange = 100;
     private int queueTime = 0;
 
-    private int elo = 0;
+    private int elo = 500;
 
     private SocketChannel clientSocket;
 

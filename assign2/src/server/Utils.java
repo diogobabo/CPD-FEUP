@@ -22,6 +22,8 @@ public class Utils {
     static final String ANSWER_TIME = "ANSWER_TIME";
     static final String GAME_START = "GAME_START";
     static final String GAME_END = "GAME_FINISHED";
+    private static final Object lock = new Object();
+
 
     private static final int BUFFER_SIZE = 1024;
 
@@ -141,4 +143,38 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
+    public static void updateUserElo(String name, String elo){
+        synchronized (lock){
+            try (BufferedReader reader = new BufferedReader(new FileReader("src/server/users.csv"))) {
+                File tempFile = new File("src/server/temp.csv");
+                PrintWriter writer = new PrintWriter(new FileWriter(tempFile));
+
+                String line;
+                boolean updated = false;
+
+                while ((line = reader.readLine()) != null) {
+                    String[] fields = line.split(",");
+                    if (fields.length >= 3 && fields[0].equals(name)) {
+                        line = fields[0] + "," + fields[1] + "," + elo;
+                        updated = true;
+                    }
+                    writer.println(line);
+                }
+                reader.close();
+                writer.flush();
+                writer.close();
+                if (updated) {
+                    File file = new File("src/server/users.csv");
+                    file.delete();
+                    tempFile.renameTo(new File("src/server/users.csv"));
+                } else {
+                    tempFile.delete();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

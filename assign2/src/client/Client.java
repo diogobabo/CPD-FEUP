@@ -116,6 +116,7 @@ public class Client {
             }
             else if(msg.equals("GAME_FINISHED")) {
                 System.out.println("Game Ended!!");
+                System.out.println(Utils.readFromSocket(socketChannel));
                 return;
             }
             else {
